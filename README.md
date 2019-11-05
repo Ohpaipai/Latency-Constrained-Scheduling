@@ -48,7 +48,7 @@ BLIF Example: sample02.blif \
 0 1 \
 .names n q \ 
 0 1 \
-.end \
+.end  
  \
 SYNOPSIS for LCS \
 %> lcs BLIF_FILE LATENCY_CONSTRAINT \
