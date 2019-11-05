@@ -17,8 +17,8 @@ would be evaluated on Linux environment according to the following requirements.
 
 
 
-BLIF Example: sample02.blif
-.model sample02
+BLIF Example: sample02.blif \n
+.model sample02 \n
 .inputs a b c d e f
 .outputs o p q
 .names a d g
