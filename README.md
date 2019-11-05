@@ -80,5 +80,5 @@ END \
 Run-time Example: \
 %> lcs sample02.blif 3 \
 Latency-constrained Scheduling \
-No feasible solution.  \ 
-END \
+No feasible solution. \
+END 
