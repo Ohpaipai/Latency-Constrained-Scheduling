@@ -46,13 +46,14 @@ BLIF Example: sample02.blif \
 111 1 \
 .names g p \
 0 1 \
-.names n q \ 
+.names n q 
 0 1 \
 .end  
  \
 SYNOPSIS for LCS \
 %> lcs BLIF_FILE LATENCY_CONSTRAINT \
 Run-time Example: \
+\
 %> lcs sample02.blif 5 \
 Latency-constrained Scheduling \
 1: {h} {j} {i} \
