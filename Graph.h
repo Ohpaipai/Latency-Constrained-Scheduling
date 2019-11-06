@@ -24,15 +24,15 @@ typedef struct Myclass {
 	std::set<std::string>BeConsist;//children
 	std::string name;//name
 	Operation status;//status(like add ,or ,not),node
-	int level;
-	int slack;
-	int oldlevel;
+	int ASAPlevel; //ASAP
+	int ALAPlevel; //ALAP
+	int q;
 	void initial(std::string _name) {
-		this->level = 0;
-		this->slack = 0;
-		this->oldlevel = 0;
+		this->ASAPlevel = 0;
+		this->ALAPlevel = -1;
 		this->status = _NULL;
 		this->name = _name;
+		this->q = 0;
 	}
 	
 }Node;
@@ -47,15 +47,19 @@ public:
 	bool ALAP(int _time);
 	void COut(bool,char);
 	void Recurison(std::map<std::string, Node>&, std::string, int, bool&);
+	void schdeul();
 private:
-	std::map<std::string, Node>Circuit;
+	std::map<std::string, Node>Circuit; //graph
 	int Restrict_AND_Resource;
 	int Restrict_OR_Resource;
 	int Restrict_NOT_Resource;
-	int MaxtimeInASAP=0;
-	int outputMaxtime=0;
+	int MaxtimeInASAP=0; //ASAP max
+	int outputMaxtime=0; //ALAP max
 	std::ifstream ifile;
 	std::string projectname;
 	std::vector<std::string>inputN;
 	std::vector<std::string>outputN;
+	std::vector<double>qand; //and Probability 
+	std::vector<double>qor; //or Probability
+	std::vector<double>qnot; //not Probability
 };

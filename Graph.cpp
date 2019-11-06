@@ -199,9 +199,9 @@ void Graph::makeCircuitDiagram(std::string _filename)
 				if (itMap != Circuit.end())
 				{
 					innode.Consist.insert(itMap->first);
-					if (itMap->second.level >=t)
+					if (itMap->second.ASAPlevel >=t)
 					{
-						t = itMap->second.level + 1;
+						t = itMap->second.ASAPlevel + 1;
 					}
 					itMap->second.BeConsist.insert(Leaf[Leaf.size()-1]);
 				}
@@ -214,7 +214,7 @@ void Graph::makeCircuitDiagram(std::string _filename)
 				}
 				
 			}
-			innode.level = t;
+			innode.ASAPlevel = t;
 			if(t>this->MaxtimeInASAP)
 				this->MaxtimeInASAP =t;
 			innode.status = op;
@@ -234,7 +234,7 @@ void Graph::Output()
 {
 	for (std::map<std::string, Node>::iterator it=Circuit.begin();it!=Circuit.end();it++)
 	{
-		std::cout << it->second.name << " , " << it->second.status << "   level :"<<it->second.level <<std::endl<<" Consist : ";
+		std::cout << it->second.name << " , " << it->second.status << "   ASAPlevel :"<<it->second.ASAPlevel << "   ALAPlevel :"<<it->second.ALAPlevel<<std::endl<<" Consist : ";
 		for (std::set<std::string>::iterator iter=it->second.Consist.begin(); iter != it->second.Consist.end();iter++)
 		{
 			std::cout << *iter << " ";
@@ -244,8 +244,11 @@ void Graph::Output()
 		{
 			std::cout << *iter << " ";
 		}
-		std::cout << std::endl<<"Resourse : AND -> ";
 		std::cout << std::endl;
+	}
+	for (int i = 1; i <=this->outputMaxtime; i++)
+	{
+		std::cout << "level = " << i << "\n and --> " << qand[i] << " ,or --> " << qor[i] << " ,not --> "<< qnot[i] << std::endl;
 	}
 }
 
@@ -255,16 +258,16 @@ bool Graph::ALAP(int _time)
 	std::map<std::string, Node>ALAPCircuit=this->Circuit;
 	for (std::map<std::string, Node>::iterator it=ALAPCircuit.begin();it!=ALAPCircuit.end();it++)
 	{
-		//it->second.slack = it->second.level;
-		it->second.oldlevel = it->second.level;
-		it->second.level = -1;
+		//it->second.slack = it->second.ASAPlevel;
+		//it->second.ALAPlevel = it->second.ASAPlevel;
+		it->second.ALAPlevel = -1;
 		
 	}
 	bool _rvalue = true;
 	for (int i = 0; i < this->outputN.size(); i++)
 	{
 		std::map<std::string, Node>::iterator it = ALAPCircuit.find(this->outputN[i]);
-		it->second.level = _time;
+		it->second.ALAPlevel = _time;
 		int time = _time;
 		Recurison(ALAPCircuit, it->first, time - 1, _rvalue);
 		if (_rvalue == false)
@@ -274,32 +277,44 @@ bool Graph::ALAP(int _time)
 	if (_rvalue)
 	{
 		this->Circuit = ALAPCircuit;
-		int a = 0; int b = 0; int c = 0;
+	
+		this->outputMaxtime = _time;
+
+		//give Probability size
+		this->qand.resize(_time+1);
+		this->qor.resize(_time+1);
+		this->qnot.resize(_time+1);
+
 		for (std::map<std::string, Node>::iterator it=Circuit.begin();it!=Circuit.end();it++)
 		{
-			it->second.slack = std::abs(it->second.slack - it->second.level);
-			switch (it->second.status)
-			{
-			case _AND:
-				a++;
-				break;
-			case _OR:
-				b++;
-				break;
-			case _NOT:
-				c++;
-				break;
-			default:
-				break;
+			if (it->second.status != _NULL) { //not initial Node
+				
+			
+					double motherNum = it->second.ALAPlevel - it->second.ASAPlevel + 1.0;
+					for (int i = it->second.ASAPlevel; i <=it->second.ALAPlevel; i++)
+					{
+						switch (it->second.status)
+						{
+						case _AND:
+							this->qand[i] += 1.0/motherNum;
+							break;
+						case _OR:
+							this->qor[i] += 1.0 / motherNum;
+							break;
+						case _NOT:
+							this->qnot[i] += 1.0 / motherNum;
+							break;
+						default:
+							break;
+						}
+					}
+				
 			}
 		}
-		if(a!=0)
-			this->Restrict_AND_Resource = 1; 
-		if(b!=0)
-			this->Restrict_OR_Resource = 1; 
-		if(c!=0)
-			this->Restrict_NOT_Resource = 1;
-		this->outputMaxtime = _time;
+
+
+	
+		
 	}
 	return _rvalue;
 }
@@ -321,15 +336,15 @@ void Graph::Recurison(std::map<std::string, Node>& _G, std::string _name, int t,
 		std::map<std::string, Node>::iterator itT= _G.find(*its);
 		if (itT->second.status == _NULL)
 		{
-			itT->second.level = 0;
+			itT->second.ALAPlevel = -2;
 		}
-		else if (itT->second.level == -1)
+		else if (itT->second.ALAPlevel == -1)
 		{
-			itT->second.level = t;
+			itT->second.ALAPlevel = t;
 		}
-		else if (itT->second.level > t)
+		else if (itT->second.ALAPlevel > t)
 		{
-			itT->second.level = t;
+			itT->second.ALAPlevel = t;
 		}
 		if (t - 1 < 0)
 		{
@@ -344,5 +359,68 @@ void Graph::Recurison(std::map<std::string, Node>& _G, std::string _name, int t,
 			
 			Recurison(_G, itT->first, t - 1, can);
 		}
+	}
+}
+
+void Graph::schdeul()
+{
+	for (std::map<std::string, Node>::iterator it = Circuit.begin(); it != Circuit.end(); it++)
+	{
+		std::pair<int, double> positionAndProbality;
+		positionAndProbality.second = 0;
+		if (it->second.ALAPlevel != it->second.ASAPlevel) //find best position
+		{	
+			for (int i = it->second.ASAPlevel; i <= it->second.ALAPlevel; i++)
+			{
+				//self force
+				double num=0;
+				double motherNum = it->second.ALAPlevel - it->second.ASAPlevel + 1.0;
+				for (int j = it->second.ASAPlevel; j <= it->second.ALAPlevel; j++)
+				{
+					//self force
+					if (i == j)
+					{
+						switch (it->second.status)
+						{
+						case _AND:
+							num += qand[i] * (1.0 - (double)1.0 / motherNum);
+							break;
+						case _OR:
+							num += qor[i] * (1.0 - (double)1.0 / motherNum);
+							break;
+						case _NOT:
+							num += qnot[i] * (1.0 - (double)1.0 / motherNum);
+							break;
+						default:
+							break;
+						}
+					}
+					else {
+						switch (it->second.status)
+						{
+						case _AND:
+							num += qand[i] * (0.0 - (double)1.0 / motherNum);
+							break;
+						case _OR:
+							num += qor[i] * (0.0 - (double)1.0 / motherNum);
+							break;
+						case _NOT:
+							num += qnot[i] * (0.0 - (double)1.0 / motherNum);
+							break;
+						default:
+							break;
+						}
+					}
+					//ps-force
+
+					//total force
+				}
+				//ps-force
+
+				//total force
+			}
+			//schedule
+		}
+		//update time-frames
 	}
 }
