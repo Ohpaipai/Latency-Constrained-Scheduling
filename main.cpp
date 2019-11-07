@@ -3,8 +3,19 @@ int main() {
 	Graph G;
 	std::string name = "test.blif";
 	G.makeCircuitDiagram(name);
-	G.ALAP(5);
-	G.Output();
+	
+//	G.Output();
+
+	//std::cout << "--------------------------------------------------------------------------\n";
+	if (G.ALAP(4)) {
+		G.schdeul();
+		G.COut();
+	}
+	else
+	{
+		std::cout << "Not answer\n";
+	}
+//	G.Output();
 	
 
 

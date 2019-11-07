@@ -27,12 +27,14 @@ typedef struct Myclass {
 	int ASAPlevel; //ASAP
 	int ALAPlevel; //ALAP
 	int q;
+	int finallevel;
 	void initial(std::string _name) {
 		this->ASAPlevel = 0;
 		this->ALAPlevel = -1;
 		this->status = _NULL;
 		this->name = _name;
 		this->q = 0;
+		this->finallevel = 0;
 	}
 	
 }Node;
@@ -45,9 +47,11 @@ public:
 	void makeCircuitDiagram(std::string);
 	void Output();
 	bool ALAP(int _time);
-	void COut(bool,char);
-	void Recurison(std::map<std::string, Node>&, std::string, int, bool&);
+	void COut();
+	void RecurisonForALAP(std::map<std::string, Node>&, std::string, int, bool&);
 	void schdeul();
+	//void RecurisonForPsforce(std::string _name,int _time);
+	void RecurisonForReschdle(std::string _name,int _level);
 private:
 	std::map<std::string, Node>Circuit; //graph
 	int Restrict_AND_Resource;

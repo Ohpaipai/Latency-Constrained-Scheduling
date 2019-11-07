@@ -269,7 +269,7 @@ bool Graph::ALAP(int _time)
 		std::map<std::string, Node>::iterator it = ALAPCircuit.find(this->outputN[i]);
 		it->second.ALAPlevel = _time;
 		int time = _time;
-		Recurison(ALAPCircuit, it->first, time - 1, _rvalue);
+		RecurisonForALAP(ALAPCircuit, it->first, time - 1, _rvalue);
 		if (_rvalue == false)
 			break;
 
@@ -290,7 +290,7 @@ bool Graph::ALAP(int _time)
 			if (it->second.status != _NULL) { //not initial Node
 				
 			
-					double motherNum = it->second.ALAPlevel - it->second.ASAPlevel + 1.0;
+					double motherNum = (it->second.ALAPlevel) - (it->second.ASAPlevel) + 1.0;
 					for (int i = it->second.ASAPlevel; i <=it->second.ALAPlevel; i++)
 					{
 						switch (it->second.status)
@@ -319,13 +319,86 @@ bool Graph::ALAP(int _time)
 	return _rvalue;
 }
 
-void Graph::COut(bool can , char input)
+void Graph::COut()
 {
-	
+
+
+		std::vector<std::string>outor;
+		std::vector<std::string>outnot;
+		std::vector<std::string>outand;
+		for (int i = 1; i <= this->outputMaxtime; i++)
+		{
+			outor.clear();
+			outand.clear();
+			outnot.clear();
+			int a = 0; int b = 0; int c = 0;
+			for (std::map<std::string, Node>::iterator it = Circuit.begin(); it != Circuit.end(); it++)
+			{
+				
+				if (it->second.finallevel == i)
+				{
+					switch (it->second.status)
+					{
+					case _OR:
+						a++;
+						outor.push_back(it->first);
+						break;
+					case _AND:
+						b++;
+						outand.push_back(it->first);
+						break;
+					case _NOT:
+						c++;
+						outnot.push_back(it->first);
+						break;
+					default:
+						break;
+					}
+				}
+				
+			}
+			if (this->Restrict_AND_Resource < b) this->Restrict_AND_Resource = b;
+			if (this->Restrict_OR_Resource < a) this->Restrict_OR_Resource = a;
+			if (this->Restrict_NOT_Resource < c) this->Restrict_NOT_Resource = c;
+			std::cout << i << " :";
+			std::cout << " { ";
+			for (int k = 0; k < outand.size(); k++)
+			{
+				if (k + 1 == outand.size())
+					std::cout << outand[k];
+				else
+					std::cout << outand[k] << ",";
+			}
+			std::cout << " } ";
+			std::cout << " { ";
+			for (int k = 0; k < outor.size(); k++)
+			{
+				if (k + 1 == outor.size())
+					std::cout << outor[k];
+				else
+					std::cout << outor[k] << ",";
+			}
+			std::cout << " } ";
+			std::cout << " { ";
+			for (int k = 0; k < outnot.size(); k++)
+			{
+				if (k + 1 == outnot.size())
+					std::cout << outnot[k];
+				else
+					std::cout << outnot[k] << ",";
+			}
+			std::cout << " } ";
+			std::cout << std::endl;
+		}
+
+		std::cout << "#AND: " << this->Restrict_AND_Resource << std::endl;
+		std::cout << "#OR: " << this->Restrict_OR_Resource << std::endl;
+		std::cout << "#NOT: " << this->Restrict_NOT_Resource << std::endl;
+		std::cout << "END" << std::endl;
 	
 }
 
-void Graph::Recurison(std::map<std::string, Node>& _G, std::string _name, int t, bool& can)
+void Graph::RecurisonForALAP(std::map<std::string, Node>& _G, std::string _name, int t, bool& can)
 {
 	if (can == false) {
 		return;
@@ -357,7 +430,7 @@ void Graph::Recurison(std::map<std::string, Node>& _G, std::string _name, int t,
 		else
 		{
 			
-			Recurison(_G, itT->first, t - 1, can);
+			RecurisonForALAP(_G, itT->first, t - 1, can);
 		}
 	}
 }
@@ -367,60 +440,180 @@ void Graph::schdeul()
 	for (std::map<std::string, Node>::iterator it = Circuit.begin(); it != Circuit.end(); it++)
 	{
 		std::pair<int, double> positionAndProbality;
-		positionAndProbality.second = 0;
-		if (it->second.ALAPlevel != it->second.ASAPlevel) //find best position
+		positionAndProbality.second = 9999999999;
+		if ((it->second.ALAPlevel != it->second.ASAPlevel)&&it->second.status!=_NULL&&it->second.finallevel==0) //find best position
 		{	
 			for (int i = it->second.ASAPlevel; i <= it->second.ALAPlevel; i++)
 			{
 				//self force
 				double num=0;
-				double motherNum = it->second.ALAPlevel - it->second.ASAPlevel + 1.0;
+				double motherNum = (double)(it->second.ALAPlevel) - (double)(it->second.ASAPlevel) + 1.0;
 				for (int j = it->second.ASAPlevel; j <= it->second.ALAPlevel; j++)
 				{
 					//self force
-					if (i == j)
-					{
+					if (i == j){
 						switch (it->second.status)
 						{
 						case _AND:
-							num += qand[i] * (1.0 - (double)1.0 / motherNum);
+							num += qand[j] * (1.0 - (double)1.0 / motherNum);
 							break;
 						case _OR:
-							num += qor[i] * (1.0 - (double)1.0 / motherNum);
+							num += qor[j] * (1.0 - (double)1.0 / motherNum);
 							break;
 						case _NOT:
-							num += qnot[i] * (1.0 - (double)1.0 / motherNum);
+							num += qnot[j] * (1.0 - (double)1.0 / motherNum);
 							break;
 						default:
 							break;
 						}
 					}
 					else {
+					
 						switch (it->second.status)
 						{
 						case _AND:
-							num += qand[i] * (0.0 - (double)1.0 / motherNum);
+							num += qand[j] * (0.0 - (double)1.0 / motherNum);
 							break;
 						case _OR:
-							num += qor[i] * (0.0 - (double)1.0 / motherNum);
+							num += qor[j] * (0.0 - (double)1.0 / motherNum);
 							break;
 						case _NOT:
-							num += qnot[i] * (0.0 - (double)1.0 / motherNum);
+							num += qnot[j] * (0.0 - (double)1.0 / motherNum);
 							break;
 						default:
 							break;
 						}
 					}
-					//ps-force
-
-					//total force
-				}
+				} 
 				//ps-force
+				for (std::set<std::string>::iterator its = it->second.BeConsist.begin(); its != it->second.BeConsist.end(); its++)
+				{
+					std::map<std::string, Node>::iterator itps = Circuit.find(*its);
+					if (itps->second.ASAPlevel <= i && itps->second.ASAPlevel >= i) { //in ASAP~ALAP reange ,be affect
+						double motherNumSub = (double)(itps->second.ALAPlevel) - (double)(itps->second.ASAPlevel) + 1.0;
+						//now is 0 possible
+						switch (itps->second.status)
+						{
+						case _AND:
+							num += qand[i] * (0.0 - (double)1.0 / motherNumSub);
+							break;
+						case _OR:
+							num += qor[i] * (0.0 - (double)1.0 / motherNumSub);
+							break;
+						case _NOT:
+							num += qnot[i] * (0.0 - (double)1.0 / motherNumSub);
+							break;
+						default:
+							break;
+						}
+						//next is 1 possible
+						for (int j = i+1; j <=itps->second.ALAPlevel; j++)
+						{
+							double keep;
+							switch (itps->second.status)
+							{
+							case _AND:
+								keep= qand[j] * (1.0 - (double)1.0 / motherNumSub);
+								num += keep;
+								break;
+							case _OR:
+								keep = qor[j] * (1.0 - (double)1.0 / motherNumSub);
+								num += keep;
+								break;
+							case _NOT:
+								keep = qnot[j] * (1.0 - (double)1.0 / motherNumSub);
+								num += keep;
+								break;
+							default:
+								break;
+							}
 
-				//total force
+							if (positionAndProbality.second > num) {
+								positionAndProbality.first = i;
+								positionAndProbality.second = num;
+							}
+							num -= keep;
+						}
+						
+					}
+				}
+				//total force is num
+				//find smallest
+				
+				
 			}
+
+			it->second.finallevel = positionAndProbality.first;
+			
 			//schedule
+			for (std::set<std::string>::iterator its = it->second.BeConsist.begin(); its != it->second.BeConsist.end(); its++)
+			{
+				RecurisonForReschdle(*its, positionAndProbality.first);
+			}
+		}
+		else {
+			it->second.finallevel = it->second.ASAPlevel;
+		}
+		//reset
+		for (int i = 0; i < this->outputMaxtime; i++)
+		{
+			this->qand[i] = 0;
+			this->qnot[i] = 0;
+			this->qor[i] = 0;
 		}
 		//update time-frames
+		for (std::map<std::string, Node>::iterator it = Circuit.begin(); it != Circuit.end(); it++)
+		{
+			if (it->second.status != _NULL) { //not initial Node
+
+
+				double motherNum = (it->second.ALAPlevel) - (it->second.ASAPlevel) + 1.0;
+				for (int i = it->second.ASAPlevel; i <= it->second.ALAPlevel; i++)
+				{
+					switch (it->second.status)
+					{
+					case _AND:
+						this->qand[i] += 1.0 / motherNum;
+						break;
+					case _OR:
+						this->qor[i] += 1.0 / motherNum;
+						break;
+					case _NOT:
+						this->qnot[i] += 1.0 / motherNum;
+						break;
+					default:
+						break;
+					}
+				}
+
+			}
+		}
 	}
 }
+
+void Graph::RecurisonForReschdle(std::string _name, int _level)
+{
+	std::map<std::string, Node>::iterator it = Circuit.find(_name);
+	if (it->second.ASAPlevel <= _level)
+	{
+		it->second.ASAPlevel = _level + 1;
+		if (it->second.ASAPlevel >= it->second.ALAPlevel)
+		{
+			it->second.ASAPlevel = it->second.ALAPlevel;
+		}
+		for (std::set<std::string>::iterator its = it->second.BeConsist.begin(); its != it->second.BeConsist.end(); its++)
+		{
+			RecurisonForReschdle(*its, it->second.ASAPlevel);
+		}
+
+	}
+	else {
+		return;
+	}
+}
+	
+
+
+
+
+
