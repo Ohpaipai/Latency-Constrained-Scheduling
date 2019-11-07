@@ -544,7 +544,8 @@ void Graph::schdeul()
 			}
 
 			it->second.finallevel = positionAndProbality.first;
-			
+			it->second.ASAPlevel = positionAndProbality.first;
+			it->second.ALAPlevel = positionAndProbality.first;
 			//schedule
 			for (std::set<std::string>::iterator its = it->second.BeConsist.begin(); its != it->second.BeConsist.end(); its++)
 			{
