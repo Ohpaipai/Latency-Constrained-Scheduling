@@ -4,10 +4,11 @@ int main() {
 	std::string name = "test.blif";
 	G.makeCircuitDiagram(name);
 	
-//	G.Output();
+	//G.Output();
 
 	std::cout << "--------------------------------------------------------------------------\n";
-	if (G.ALAP(100)) {
+	if (G.ALAP(50)) {
+		//G.setException();
 		G.schdeul();
 		G.COut();
 	}
@@ -15,7 +16,7 @@ int main() {
 	{
 		std::cout << "Not answer\n";
 	}
-//	G.Output();
+	//G.Output();
 	
 
 

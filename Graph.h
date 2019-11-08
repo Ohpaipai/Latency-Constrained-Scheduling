@@ -8,7 +8,7 @@
 #include<sstream>
 #include<algorithm>
 #include<queue>
-#define Operationtime 1
+
 //Opreation define
 enum Operation {
 	_NULL,
@@ -28,16 +28,27 @@ typedef struct Myclass {
 	int ALAPlevel; //ALAP
 	int q;
 	int finallevel;
+	int andResourceNum;//*
+	int orResourceNum;//+
+	int notResourceNum;//~
+	int exception;
 	void initial(std::string _name) {
+		this->andResourceNum = 0;
+		this->orResourceNum = 0;
+		this->notResourceNum = 0;
 		this->ASAPlevel = 0;
 		this->ALAPlevel = -1;
 		this->status = _NULL;
 		this->name = _name;
 		this->q = 0;
 		this->finallevel = 0;
+		this->exception = 0;
 	}
 	
 }Node;
+
+
+
 
 class Graph
 {
@@ -48,10 +59,12 @@ public:
 	void Output();
 	bool ALAP(int _time);
 	void COut();
+	void setException();
 	void RecurisonForALAP(std::map<std::string, Node>&, std::string, int, bool&);
 	void schdeul();
 	//void RecurisonForPsforce(std::string _name,int _time);
 	void RecurisonForReschdle(std::string _name,int _level);
+	
 private:
 	std::map<std::string, Node>Circuit; //graph
 	int Restrict_AND_Resource;

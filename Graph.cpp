@@ -398,6 +398,100 @@ void Graph::COut()
 	
 }
 
+void Graph::setException()
+{
+	std::vector<std::string>::iterator itString;
+	std::vector<std::string>_name;
+	for (std::map<std::string, Node>::iterator it = Circuit.begin(); it != Circuit.end(); it++)
+	{
+		_name.clear();
+		std::string name = it->first;
+
+		for (std::set<std::string>::iterator its = it->second.BeConsist.begin(); its != it->second.BeConsist.end(); its++)
+		{
+			
+			std::map<std::string, Node>::iterator iter = Circuit.find(*its);
+
+			switch (iter->second.status)
+			{
+			case _OR:
+				it->second.orResourceNum++;
+				break;
+			case _AND:
+				it->second.andResourceNum++;
+				break;
+			case _NOT:
+				it->second.notResourceNum++;
+				break;
+			default:
+				break;
+			}
+			_name.push_back(*its);
+
+
+
+		}
+		while (true)
+		{
+			if (_name.size() == 0) break;
+			//std::cout << _name.size() << std::endl;
+			std::vector<std::string>_name2;
+			for (int i = 0; i < _name.size(); i++)
+			{
+
+				//BFS to find (in the ready and not ready,can't have repeat
+				std::map<std::string, Node>::iterator itN = Circuit.find(_name[i]);
+				for (std::set<std::string>::iterator its = itN->second.BeConsist.begin(); its != itN->second.BeConsist.end(); its++)
+				{
+					bool find = false;
+					for (int l = 0; l < _name2.size(); l++)
+					{
+						if (_name2[l] == *its)
+						{
+							find = true;
+							break;
+						}
+					}
+					for (int l = 0; l < _name.size(); l++)
+					{
+						if (_name[l] == *its)
+						{
+							find = true;
+							break;
+						}
+					}
+					std::map<std::string, Node>::iterator itN2 = Circuit.find(*its);
+					if (!find)
+					{
+						switch (itN2->second.status)
+						{
+						case _OR:
+							it->second.orResourceNum++;
+							break;
+						case _AND:
+							it->second.andResourceNum++;
+							break;
+						case _NOT:
+							it->second.notResourceNum++;
+							break;
+						default:
+							break;
+						}
+
+						_name2.push_back(itN2->first);
+					}
+				}
+
+
+
+
+			}
+			_name = _name2;
+		}
+
+	}
+}
+
 void Graph::RecurisonForALAP(std::map<std::string, Node>& _G, std::string _name, int t, bool& can)
 {
 	if (can == false) {
@@ -435,10 +529,27 @@ void Graph::RecurisonForALAP(std::map<std::string, Node>& _G, std::string _name,
 	}
 }
 
-void Graph::schdeul()
+bool cmpException(const std::pair<std::string, Node>& p1, const std::pair<std::string, Node>& p2)
 {
+	return p1.second.exception > p2.second.exception;
+}
+void Graph::schdeul()
+{/// here is use Exception to chose which node first
+	/*std::vector< std::pair<std::string, Node>>valueExceptionCircuit;
+	for (std::map<std::string, Node>::iterator it = Circuit.begin(); it != Circuit.end(); it++) {
+		it->second.exception = it->second.andResourceNum + it->second.notResourceNum + it->second.orResourceNum;
+		valueExceptionCircuit.push_back(std::make_pair(it->first,it->second));
+	}
+	std::sort(valueExceptionCircuit.begin(), valueExceptionCircuit.end(), cmpException);*/
+///
 	for (std::map<std::string, Node>::iterator it = Circuit.begin(); it != Circuit.end(); it++)
+	//for(std::vector< std::pair<std::string, Node>>::iterator it=valueExceptionCircuit.begin();it!=valueExceptionCircuit.end();it++)
 	{
+		/*if (it->first == "p")
+		{
+			std::cout << "dsadsa\n";
+		}*/
+		//std::cout << it->first << "   " << it->second.exception << "\n";
 		std::pair<int, double> positionAndProbality;
 		positionAndProbality.second = 9999999999;
 		if ((it->second.ALAPlevel != it->second.ASAPlevel)&&it->second.status!=_NULL&&it->second.finallevel==0) //find best position
@@ -486,57 +597,172 @@ void Graph::schdeul()
 					}
 				} 
 				//ps-force
-				for (std::set<std::string>::iterator its = it->second.BeConsist.begin(); its != it->second.BeConsist.end(); its++)
+				bool isafected = false; //IF AFFECT FATHER
+				//father
+				for (std::set<std::string>::iterator it_father = it->second.Consist.begin(); it_father != it->second.Consist.end(); it_father++)
 				{
-					std::map<std::string, Node>::iterator itps = Circuit.find(*its);
-					if (itps->second.ASAPlevel <= i && itps->second.ASAPlevel >= i) { //in ASAP~ALAP reange ,be affect
-						double motherNumSub = (double)(itps->second.ALAPlevel) - (double)(itps->second.ASAPlevel) + 1.0;
-						//now is 0 possible
-						switch (itps->second.status)
+					std::map<std::string, Node>::iterator itps_father = Circuit.find(*it_father);
+					if (itps_father->second.ASAPlevel <= i && itps_father->second.ASAPlevel >= i)
+					{	//father affected
+						if (itps_father->second.ASAPlevel <= i && itps_father->second.ASAPlevel >= i)
 						{
-						case _AND:
-							num += qand[i] * (0.0 - (double)1.0 / motherNumSub);
-							break;
-						case _OR:
-							num += qor[i] * (0.0 - (double)1.0 / motherNumSub);
-							break;
-						case _NOT:
-							num += qnot[i] * (0.0 - (double)1.0 / motherNumSub);
-							break;
-						default:
-							break;
-						}
-						//next is 1 possible
-						for (int j = i+1; j <=itps->second.ALAPlevel; j++)
-						{
-							double keep;
-							switch (itps->second.status)
+							double motherNumSub_father = (double)(itps_father->second.ALAPlevel) - (double)(itps_father->second.ASAPlevel) + 1.0;
+							//father now is 0 possible
+							switch (itps_father->second.status)
 							{
 							case _AND:
-								keep= qand[j] * (1.0 - (double)1.0 / motherNumSub);
-								num += keep;
+								num += qand[i] * (0.0 - (double)1.0 / motherNumSub_father);
 								break;
 							case _OR:
-								keep = qor[j] * (1.0 - (double)1.0 / motherNumSub);
-								num += keep;
+								num += qor[i] * (0.0 - (double)1.0 / motherNumSub_father);
 								break;
 							case _NOT:
-								keep = qnot[j] * (1.0 - (double)1.0 / motherNumSub);
-								num += keep;
+								num += qnot[i] * (0.0 - (double)1.0 / motherNumSub_father);
 								break;
 							default:
 								break;
 							}
+							//father next(--) is 1 possible
+							int tem_father = 0;
+							isafected = true;
+							//every father node to check can place is 1
+							for (int k = i - 1; k >= itps_father->second.ASAPlevel; k--)
+							{
+								
+								switch (itps_father->second.status)
+								{
+									
+								case _AND:
+									tem_father = qand[k] * (1.0 - (double)1.0 / motherNumSub_father);
+									num += tem_father;
+									break;
+								case _OR:
+									tem_father = qor[k] * (1.0 - (double)1.0 / motherNumSub_father);
+									num += tem_father;
+									break;
+								case _NOT:
+									tem_father = qnot[k] * (1.0 - (double)1.0 / motherNumSub_father);
+									num += tem_father;
+									break;
+								default:
+									break;
+								}
+								//sucessor
+								for (std::set<std::string>::iterator its = it->second.BeConsist.begin(); its != it->second.BeConsist.end(); its++)
+								{
+									std::map<std::string, Node>::iterator itps = Circuit.find(*its);
+									if (itps->second.ASAPlevel <= i && itps->second.ASAPlevel >= i) { //in ASAP~ALAP reange ,be affect
+										double motherNumSub = (double)(itps->second.ALAPlevel) - (double)(itps->second.ASAPlevel) + 1.0;
+										//now is 0 possible
+										switch (itps->second.status)
+										{
+										case _AND:
+											num += qand[i] * (0.0 - (double)1.0 / motherNumSub);
+											break;
+										case _OR:
+											num += qor[i] * (0.0 - (double)1.0 / motherNumSub);
+											break;
+										case _NOT:
+											num += qnot[i] * (0.0 - (double)1.0 / motherNumSub);
+											break;
+										default:
+											break;
+										}
+										//next is 1 possible
+										for (int j = i + 1; j <= itps->second.ALAPlevel; j++)
+										{
+											double keep;
+											switch (itps->second.status)
+											{
+											case _AND:
+												keep = qand[j] * (1.0 - (double)1.0 / motherNumSub);
+												num += keep;
+												break;
+											case _OR:
+												keep = qor[j] * (1.0 - (double)1.0 / motherNumSub);
+												num += keep;
+												break;
+											case _NOT:
+												keep = qnot[j] * (1.0 - (double)1.0 / motherNumSub);
+												num += keep;
+												break;
+											default:
+												break;
+											}
 
-							if (positionAndProbality.second > num) {
-								positionAndProbality.first = i;
-								positionAndProbality.second = num;
+											if (positionAndProbality.second > num) {
+												positionAndProbality.first = i;
+												positionAndProbality.second = num;
+											}
+											num -= keep;
+										}
+
+									}
+								}
+								num -= tem_father;
 							}
-							num -= keep;
 						}
-						
 					}
 				}
+				//if not affect father
+				if (isafected == false) {
+					for (std::set<std::string>::iterator its = it->second.BeConsist.begin(); its != it->second.BeConsist.end(); its++)
+					{
+						std::map<std::string, Node>::iterator itps = Circuit.find(*its);
+						if (itps->second.ASAPlevel <= i && itps->second.ASAPlevel >= i) { //in ASAP~ALAP reange ,be affect
+							double motherNumSub = (double)(itps->second.ALAPlevel) - (double)(itps->second.ASAPlevel) + 1.0;
+							//now is 0 possible
+							switch (itps->second.status)
+							{
+							case _AND:
+								num += qand[i] * (0.0 - (double)1.0 / motherNumSub);
+								break;
+							case _OR:
+								num += qor[i] * (0.0 - (double)1.0 / motherNumSub);
+								break;
+							case _NOT:
+								num += qnot[i] * (0.0 - (double)1.0 / motherNumSub);
+								break;
+							default:
+								break;
+							}
+							//next is 1 possible
+							for (int j = i + 1; j <= itps->second.ALAPlevel; j++)
+							{
+								double keep;
+								switch (itps->second.status)
+								{
+								case _AND:
+									keep = qand[j] * (1.0 - (double)1.0 / motherNumSub);
+									num += keep;
+									break;
+								case _OR:
+									keep = qor[j] * (1.0 - (double)1.0 / motherNumSub);
+									num += keep;
+									break;
+								case _NOT:
+									keep = qnot[j] * (1.0 - (double)1.0 / motherNumSub);
+									num += keep;
+									break;
+								default:
+									break;
+								}
+
+								if (positionAndProbality.second > num) {
+									positionAndProbality.first = i;
+									positionAndProbality.second = num;
+								}
+								num -= keep;
+							}
+
+						}
+					}
+					if (positionAndProbality.second > num) {
+						positionAndProbality.first = i;
+						positionAndProbality.second = num;
+					}
+				}
+				
 				//total force is num
 				//find smallest
 				
@@ -547,6 +773,18 @@ void Graph::schdeul()
 			it->second.ASAPlevel = positionAndProbality.first;
 			it->second.ALAPlevel = positionAndProbality.first;
 			//schedule
+			for (std::set<std::string>::iterator it_father = it->second.Consist.begin(); it_father != it->second.Consist.end(); it_father++)
+			{
+				std::map<std::string, Node>::iterator itps_father = Circuit.find(*it_father);
+				if (itps_father->second.ALAPlevel < positionAndProbality.first)
+				{
+					itps_father->second.ALAPlevel = positionAndProbality.first;
+				}
+				if (itps_father->second.ALAPlevel < itps_father->second.ASAPlevel)
+				{
+					itps_father->second.ALAPlevel = itps_father->second.ASAPlevel;
+				}
+			}
 			for (std::set<std::string>::iterator its = it->second.BeConsist.begin(); its != it->second.BeConsist.end(); its++)
 			{
 				RecurisonForReschdle(*its, positionAndProbality.first);
@@ -590,6 +828,14 @@ void Graph::schdeul()
 			}
 		}
 	}
+
+	//push
+
+	//Circuit.clear();
+	//for (std::vector< std::pair<std::string, Node>>::iterator it = valueExceptionCircuit.begin(); it != valueExceptionCircuit.end(); it++) {
+	//	Circuit[it->first] = it->second;
+	//}
+
 }
 
 void Graph::RecurisonForReschdle(std::string _name, int _level)
