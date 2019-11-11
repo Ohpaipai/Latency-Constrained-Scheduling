@@ -549,20 +549,24 @@ void Graph::schdeul()
 		{
 			std::cout << "dsadsa\n";
 		}*/
+		/*if (it->first == "l")
+		{
+			std::cout << "dsadsa\n";
+		}*/
 		//std::cout << it->first << "   " << it->second.exception << "\n";
 		std::pair<int, double> positionAndProbality;
 		positionAndProbality.second = 9999999999;
-		if ((it->second.ALAPlevel != it->second.ASAPlevel)&&it->second.status!=_NULL&&it->second.finallevel==0) //find best position
-		{	
+		if ((it->second.ALAPlevel != it->second.ASAPlevel) && it->second.status != _NULL && it->second.finallevel == 0) //find best position
+		{
 			for (int i = it->second.ASAPlevel; i <= it->second.ALAPlevel; i++)
 			{
 				//self force
-				double num=0;
+				double num = 0;
 				double motherNum = (double)(it->second.ALAPlevel) - (double)(it->second.ASAPlevel) + 1.0;
 				for (int j = it->second.ASAPlevel; j <= it->second.ALAPlevel; j++)
 				{
 					//self force
-					if (i == j){
+					if (i == j) {
 						switch (it->second.status)
 						{
 						case _AND:
@@ -579,7 +583,7 @@ void Graph::schdeul()
 						}
 					}
 					else {
-					
+
 						switch (it->second.status)
 						{
 						case _AND:
@@ -595,121 +599,190 @@ void Graph::schdeul()
 							break;
 						}
 					}
-				} 
+				}
 				//ps-force
 				bool isafected = false; //IF AFFECT FATHER
+				bool all = false;
 				//father
 				for (std::set<std::string>::iterator it_father = it->second.Consist.begin(); it_father != it->second.Consist.end(); it_father++)
 				{
+
 					std::map<std::string, Node>::iterator itps_father = Circuit.find(*it_father);
-					if (itps_father->second.ASAPlevel <= i && itps_father->second.ASAPlevel >= i)
-					{	//father affected
-						if (itps_father->second.ASAPlevel <= i && itps_father->second.ASAPlevel >= i)
+					//bool c = 0;
+						//father affected
+					if (itps_father->second.ASAPlevel <= i && itps_father->second.ALAPlevel >= i)
+					{
+						bool c = 0;
+						all = true;
+						double motherNumSub_father = (double)(itps_father->second.ALAPlevel) - (double)(itps_father->second.ASAPlevel) + 1.0;
+						//father now is 0 possible
+						switch (itps_father->second.status)
 						{
-							double motherNumSub_father = (double)(itps_father->second.ALAPlevel) - (double)(itps_father->second.ASAPlevel) + 1.0;
-							//father now is 0 possible
+						case _AND:
+							num += qand[i] * (0.0 - (double)1.0 / motherNumSub_father);
+							break;
+						case _OR:
+							num += qor[i] * (0.0 - (double)1.0 / motherNumSub_father);
+							break;
+						case _NOT:
+							num += qnot[i] * (0.0 - (double)1.0 / motherNumSub_father);
+							break;
+						default:
+							break;
+						}
+						//father next(--) is 1 possible
+						int tem_father = 0;
+						isafected = true;
+
+						//every father node to check can place is 1
+						for (int k = i - 1; k >= itps_father->second.ASAPlevel; k--)
+						{
+							c = 1;
+							bool b = 0;
 							switch (itps_father->second.status)
 							{
+
 							case _AND:
-								num += qand[i] * (0.0 - (double)1.0 / motherNumSub_father);
+								tem_father = qand[k] * (1.0 - (double)1.0 / motherNumSub_father);
+								num += tem_father;
 								break;
 							case _OR:
-								num += qor[i] * (0.0 - (double)1.0 / motherNumSub_father);
+								tem_father = qor[k] * (1.0 - (double)1.0 / motherNumSub_father);
+								num += tem_father;
 								break;
 							case _NOT:
-								num += qnot[i] * (0.0 - (double)1.0 / motherNumSub_father);
+								tem_father = qnot[k] * (1.0 - (double)1.0 / motherNumSub_father);
+								num += tem_father;
 								break;
 							default:
 								break;
 							}
-							//father next(--) is 1 possible
-							int tem_father = 0;
-							isafected = true;
-							//every father node to check can place is 1
-							for (int k = i - 1; k >= itps_father->second.ASAPlevel; k--)
+							//sucessor
+							for (std::set<std::string>::iterator its = it->second.BeConsist.begin(); its != it->second.BeConsist.end(); its++)
 							{
-								
-								switch (itps_father->second.status)
-								{
-									
-								case _AND:
-									tem_father = qand[k] * (1.0 - (double)1.0 / motherNumSub_father);
-									num += tem_father;
-									break;
-								case _OR:
-									tem_father = qor[k] * (1.0 - (double)1.0 / motherNumSub_father);
-									num += tem_father;
-									break;
-								case _NOT:
-									tem_father = qnot[k] * (1.0 - (double)1.0 / motherNumSub_father);
-									num += tem_father;
-									break;
-								default:
-									break;
-								}
-								//sucessor
-								for (std::set<std::string>::iterator its = it->second.BeConsist.begin(); its != it->second.BeConsist.end(); its++)
-								{
-									std::map<std::string, Node>::iterator itps = Circuit.find(*its);
-									if (itps->second.ASAPlevel <= i && itps->second.ASAPlevel >= i) { //in ASAP~ALAP reange ,be affect
-										double motherNumSub = (double)(itps->second.ALAPlevel) - (double)(itps->second.ASAPlevel) + 1.0;
-										//now is 0 possible
+
+
+								std::map<std::string, Node>::iterator itps = Circuit.find(*its);
+								if (itps->second.ASAPlevel <= i && itps->second.ALAPlevel >= i) { //in ASAP~ALAP reange ,be affect
+									all = true;
+									double motherNumSub = (double)(itps->second.ALAPlevel) - (double)(itps->second.ASAPlevel) + 1.0;
+									//now is 0 possible
+									switch (itps->second.status)
+									{
+									case _AND:
+										num += qand[i] * (0.0 - (double)1.0 / motherNumSub);
+										break;
+									case _OR:
+										num += qor[i] * (0.0 - (double)1.0 / motherNumSub);
+										break;
+									case _NOT:
+										num += qnot[i] * (0.0 - (double)1.0 / motherNumSub);
+										break;
+									default:
+										break;
+									}
+									//next is 1 possible
+									bool a = 0;
+									for (int j = i + 1; j <= itps->second.ALAPlevel; j++)
+									{
+
+										a = 1;
+										double keep;
 										switch (itps->second.status)
 										{
 										case _AND:
-											num += qand[i] * (0.0 - (double)1.0 / motherNumSub);
+											keep = qand[j] * (1.0 - (double)1.0 / motherNumSub);
+											num += keep;
 											break;
 										case _OR:
-											num += qor[i] * (0.0 - (double)1.0 / motherNumSub);
+											keep = qor[j] * (1.0 - (double)1.0 / motherNumSub);
+											num += keep;
 											break;
 										case _NOT:
-											num += qnot[i] * (0.0 - (double)1.0 / motherNumSub);
+											keep = qnot[j] * (1.0 - (double)1.0 / motherNumSub);
+											num += keep;
 											break;
 										default:
 											break;
 										}
-										//next is 1 possible
-										for (int j = i + 1; j <= itps->second.ALAPlevel; j++)
-										{
-											double keep;
-											switch (itps->second.status)
-											{
-											case _AND:
-												keep = qand[j] * (1.0 - (double)1.0 / motherNumSub);
-												num += keep;
-												break;
-											case _OR:
-												keep = qor[j] * (1.0 - (double)1.0 / motherNumSub);
-												num += keep;
-												break;
-											case _NOT:
-												keep = qnot[j] * (1.0 - (double)1.0 / motherNumSub);
-												num += keep;
-												break;
-											default:
-												break;
-											}
 
-											if (positionAndProbality.second > num) {
-												positionAndProbality.first = i;
-												positionAndProbality.second = num;
-											}
-											num -= keep;
+										if (positionAndProbality.second > num) {
+											positionAndProbality.first = i;
+											positionAndProbality.second = num;
 										}
+										else if (positionAndProbality.second == num) {
+											if (positionAndProbality.first > i)
+												positionAndProbality.second = num;
+										}
+										num -= keep;
+									}
 
+									if (a == 0) {
+										if (positionAndProbality.second > num) {
+											positionAndProbality.first = i;
+											positionAndProbality.second = num;
+										}
+										else if (positionAndProbality.second == num) {
+											if (positionAndProbality.first > i)
+												positionAndProbality.second = num;
+										}
 									}
 								}
-								num -= tem_father;
+
+
+
+							}
+							//compare
+							if (b == 0) {
+								if (positionAndProbality.second > num) {
+									positionAndProbality.first = i;
+									positionAndProbality.second = num;
+								}
+								else if (positionAndProbality.second == num) {
+									if (positionAndProbality.first > i)
+										positionAndProbality.second = num;
+								}
+							}
+							num -= tem_father;
+						}
+
+						if (c == 0) {
+							if (positionAndProbality.second > num) {
+								positionAndProbality.first = i;
+								positionAndProbality.second = num;
+							}
+							else if (positionAndProbality.second == num) {
+								if (positionAndProbality.first > i)
+									positionAndProbality.second = num;
 							}
 						}
 					}
+
+
+					//compare
+					/*if (c == 0) {
+						if (positionAndProbality.second > num) {
+							positionAndProbality.first = i;
+							positionAndProbality.second = num;
+						}
+						else if (positionAndProbality.second == num) {
+							if (positionAndProbality.first > i)
+								positionAndProbality.second = num;
+						}
+					}*/
+
 				}
+
 				//if not affect father
 				if (isafected == false) {
+					//	std::cout << "debug\n";
 					for (std::set<std::string>::iterator its = it->second.BeConsist.begin(); its != it->second.BeConsist.end(); its++)
 					{
+
+
 						std::map<std::string, Node>::iterator itps = Circuit.find(*its);
-						if (itps->second.ASAPlevel <= i && itps->second.ASAPlevel >= i) { //in ASAP~ALAP reange ,be affect
+						if (itps->second.ASAPlevel <= i && itps->second.ALAPlevel >= i) { //in ASAP~ALAP reange ,be affect
+							all = true;
 							double motherNumSub = (double)(itps->second.ALAPlevel) - (double)(itps->second.ASAPlevel) + 1.0;
 							//now is 0 possible
 							switch (itps->second.status)
@@ -727,8 +800,11 @@ void Graph::schdeul()
 								break;
 							}
 							//next is 1 possible
+							bool a = 0;
 							for (int j = i + 1; j <= itps->second.ALAPlevel; j++)
 							{
+
+								a = 1;
 								double keep;
 								switch (itps->second.status)
 								{
@@ -752,35 +828,73 @@ void Graph::schdeul()
 									positionAndProbality.first = i;
 									positionAndProbality.second = num;
 								}
+								else if (positionAndProbality.second == num) {
+									if (positionAndProbality.first > i)
+										positionAndProbality.second = num;
+								}
 								num -= keep;
 							}
 
+							if (a == 0) {
+								if (positionAndProbality.second > num) {
+									positionAndProbality.first = i;
+									positionAndProbality.second = num;
+								}
+								else if (positionAndProbality.second == num) {
+									if (positionAndProbality.first > i)
+										positionAndProbality.second = num;
+								}
+							}
 						}
+
+
+
 					}
+
+
+
+
+				}
+
+				//total force is num
+				//find smallest
+				if (!all)
+				{
 					if (positionAndProbality.second > num) {
 						positionAndProbality.first = i;
 						positionAndProbality.second = num;
 					}
+					else if (positionAndProbality.second == num) {
+						if (positionAndProbality.first > i)
+							positionAndProbality.second = num;
+					}
 				}
-				
-				//total force is num
-				//find smallest
-				
-				
+
 			}
 
+
+
+
+
+
+
+
+
+			///////
 			it->second.finallevel = positionAndProbality.first;
 			it->second.ASAPlevel = positionAndProbality.first;
 			it->second.ALAPlevel = positionAndProbality.first;
+		//	std::cout << it->first << "   " << positionAndProbality.first << "  " << positionAndProbality.second << "  " << "\n";
+
 			//schedule
 			for (std::set<std::string>::iterator it_father = it->second.Consist.begin(); it_father != it->second.Consist.end(); it_father++)
 			{
 				std::map<std::string, Node>::iterator itps_father = Circuit.find(*it_father);
-				if (itps_father->second.ALAPlevel < positionAndProbality.first)
+				if (itps_father->second.ALAPlevel >= positionAndProbality.first)
 				{
-					itps_father->second.ALAPlevel = positionAndProbality.first;
+					itps_father->second.ALAPlevel = positionAndProbality.first - 1;
 				}
-				if (itps_father->second.ALAPlevel < itps_father->second.ASAPlevel)
+				if (itps_father->second.ALAPlevel <= itps_father->second.ASAPlevel)
 				{
 					itps_father->second.ALAPlevel = itps_father->second.ASAPlevel;
 				}
@@ -789,9 +903,39 @@ void Graph::schdeul()
 			{
 				RecurisonForReschdle(*its, positionAndProbality.first);
 			}
+			/*	for (std::vector< std::pair<std::string, Node>>::iterator itv = valueExceptionCircuit.begin(); itv != valueExceptionCircuit.end(); itv++) {
+					if (itv->first != it->first) {
+						std::map<std::string, Node>::iterator itpsv = Circuit.find(itv->first);
+						itv->second.ALAPlevel = itpsv->second.ALAPlevel;
+						itv->second.ASAPlevel = itpsv->second.ASAPlevel;
+						itv->second.finallevel = itpsv->second.finallevel;
+					}vim Gr
+				}*/
+
+				/*if (it->first == "g")
+				{
+					std::cout << "\n";
+				}*/
 		}
 		else {
 			it->second.finallevel = it->second.ASAPlevel;
+			for (std::set<std::string>::iterator it_father = it->second.Consist.begin(); it_father != it->second.Consist.end(); it_father++)
+			{
+				std::map<std::string, Node>::iterator itps_father = Circuit.find(*it_father);
+				if (itps_father->second.ALAPlevel >= it->second.finallevel)
+				{
+					itps_father->second.ALAPlevel = it->second.finallevel - 1;
+				}
+				if (itps_father->second.ALAPlevel <= itps_father->second.ASAPlevel)
+				{
+					itps_father->second.ALAPlevel = itps_father->second.ASAPlevel;
+				}
+			}
+			for (std::set<std::string>::iterator its = it->second.BeConsist.begin(); its != it->second.BeConsist.end(); its++)
+			{
+				RecurisonForReschdle(*its, it->second.finallevel);
+			}
+
 		}
 		//reset
 		for (int i = 0; i < this->outputMaxtime; i++)
@@ -837,6 +981,479 @@ void Graph::schdeul()
 	//}
 
 }
+
+
+void Graph::schdeulForChildrenNum(bool  up)
+{/// here is use Exception to chose which node first
+	this->setException();
+	std::vector< std::pair<std::string, Node>>valueExceptionCircuit;
+	for (std::map<std::string, Node>::iterator it = Circuit.begin(); it != Circuit.end(); it++) {
+		it->second.exception = it->second.andResourceNum + it->second.notResourceNum + it->second.orResourceNum;
+		valueExceptionCircuit.push_back(std::make_pair(it->first,it->second));
+	}
+	std::sort(valueExceptionCircuit.begin(), valueExceptionCircuit.end(), cmpException);
+	if (!up) //children less first up=0 ,many first up=1
+		std::reverse(valueExceptionCircuit.begin(), valueExceptionCircuit.end());
+	///
+	//for (std::map<std::string, Node>::iterator it = Circuit.begin(); it != Circuit.end(); it++)
+	for(std::vector< std::pair<std::string, Node>>::iterator it=valueExceptionCircuit.begin();it!=valueExceptionCircuit.end();it++)
+	{
+		/*if (it->first == "l")
+		{
+			std::cout << "dsadsa\n";
+		}*/
+		//std::cout << it->first << "   " << it->second.exception << "\n";
+		std::pair<int, double> positionAndProbality;
+		positionAndProbality.second = 9999999999;
+		/*if (it->first == "n")
+		{
+			std::cout << "\n";
+		}*/
+		if ((it->second.ALAPlevel != it->second.ASAPlevel) && it->second.status != _NULL && it->second.finallevel == 0) //find best position
+		{
+			for (int i = it->second.ASAPlevel; i <= it->second.ALAPlevel; i++)
+			{
+				//self force
+				double num = 0;
+				double motherNum = (double)(it->second.ALAPlevel) - (double)(it->second.ASAPlevel) + 1.0;
+				for (int j = it->second.ASAPlevel; j <= it->second.ALAPlevel; j++)
+				{
+					//self force
+					if (i == j) {
+						switch (it->second.status)
+						{
+						case _AND:
+							num += qand[j] * (1.0 - (double)1.0 / motherNum);
+							break;
+						case _OR:
+							num += qor[j] * (1.0 - (double)1.0 / motherNum);
+							break;
+						case _NOT:
+							num += qnot[j] * (1.0 - (double)1.0 / motherNum);
+							break;
+						default:
+							break;
+						}
+					}
+					else {
+
+						switch (it->second.status)
+						{
+						case _AND:
+							num += qand[j] * (0.0 - (double)1.0 / motherNum);
+							break;
+						case _OR:
+							num += qor[j] * (0.0 - (double)1.0 / motherNum);
+							break;
+						case _NOT:
+							num += qnot[j] * (0.0 - (double)1.0 / motherNum);
+							break;
+						default:
+							break;
+						}
+					}
+				}
+				//ps-force
+				bool isafected = false; //IF AFFECT FATHER
+				bool all = false;
+				//father
+				for (std::set<std::string>::iterator it_father = it->second.Consist.begin(); it_father != it->second.Consist.end(); it_father++)
+				{
+					
+					std::map<std::string, Node>::iterator itps_father = Circuit.find(*it_father);
+					//bool c = 0;
+						//father affected
+						if (itps_father->second.ASAPlevel <= i && itps_father->second.ALAPlevel >= i)
+						{
+							bool c = 0;
+							all = true;
+							double motherNumSub_father = (double)(itps_father->second.ALAPlevel) - (double)(itps_father->second.ASAPlevel) + 1.0;
+							//father now is 0 possible
+							switch (itps_father->second.status)
+							{
+							case _AND:
+								num += qand[i] * (0.0 - (double)1.0 / motherNumSub_father);
+								break;
+							case _OR:
+								num += qor[i] * (0.0 - (double)1.0 / motherNumSub_father);
+								break;
+							case _NOT:
+								num += qnot[i] * (0.0 - (double)1.0 / motherNumSub_father);
+								break;
+							default:
+								break;
+							}
+							//father next(--) is 1 possible
+							int tem_father = 0;
+							isafected = true;
+						
+							//every father node to check can place is 1
+							for (int k = i - 1; k >= itps_father->second.ASAPlevel; k--)
+							{
+								c = 1;
+								bool b = 0;
+								switch (itps_father->second.status)
+								{
+
+								case _AND:
+									tem_father = qand[k] * (1.0 - (double)1.0 / motherNumSub_father);
+									num += tem_father;
+									break;
+								case _OR:
+									tem_father = qor[k] * (1.0 - (double)1.0 / motherNumSub_father);
+									num += tem_father;
+									break;
+								case _NOT:
+									tem_father = qnot[k] * (1.0 - (double)1.0 / motherNumSub_father);
+									num += tem_father;
+									break;
+								default:
+									break;
+								}
+								//sucessor
+								for (std::set<std::string>::iterator its = it->second.BeConsist.begin(); its != it->second.BeConsist.end(); its++)
+								{
+
+
+									std::map<std::string, Node>::iterator itps = Circuit.find(*its);
+									if (itps->second.ASAPlevel <= i && itps->second.ALAPlevel >= i) { //in ASAP~ALAP reange ,be affect
+										all = true;
+										double motherNumSub = (double)(itps->second.ALAPlevel) - (double)(itps->second.ASAPlevel) + 1.0;
+										//now is 0 possible
+										switch (itps->second.status)
+										{
+										case _AND:
+											num += qand[i] * (0.0 - (double)1.0 / motherNumSub);
+											break;
+										case _OR:
+											num += qor[i] * (0.0 - (double)1.0 / motherNumSub);
+											break;
+										case _NOT:
+											num += qnot[i] * (0.0 - (double)1.0 / motherNumSub);
+											break;
+										default:
+											break;
+										}
+										//next is 1 possible
+										bool a = 0;
+										for (int j = i + 1; j <= itps->second.ALAPlevel; j++)
+										{
+
+											a = 1;
+											double keep;
+											switch (itps->second.status)
+											{
+											case _AND:
+												keep = qand[j] * (1.0 - (double)1.0 / motherNumSub);
+												num += keep;
+												break;
+											case _OR:
+												keep = qor[j] * (1.0 - (double)1.0 / motherNumSub);
+												num += keep;
+												break;
+											case _NOT:
+												keep = qnot[j] * (1.0 - (double)1.0 / motherNumSub);
+												num += keep;
+												break;
+											default:
+												break;
+											}
+
+											if (positionAndProbality.second > num) {
+												positionAndProbality.first = i;
+												positionAndProbality.second = num;
+											}
+											else if (positionAndProbality.second == num) {
+												if (positionAndProbality.first > i)
+													positionAndProbality.second = num;
+											}
+											num -= keep;
+										}
+
+										if (a == 0) {
+											if (positionAndProbality.second > num) {
+												positionAndProbality.first = i;
+												positionAndProbality.second = num;
+											}
+											else if (positionAndProbality.second == num) {
+												if (positionAndProbality.first > i)
+													positionAndProbality.second = num;
+											}
+										}
+									}
+
+
+
+								}
+								//compare
+								if (b == 0) {
+									if (positionAndProbality.second > num) {
+										positionAndProbality.first = i;
+										positionAndProbality.second = num;
+									}
+									else if (positionAndProbality.second == num) {
+										if (positionAndProbality.first > i)
+											positionAndProbality.second = num;
+									}
+								}
+								num -= tem_father;
+							}
+
+							if (c == 0) {
+							if (positionAndProbality.second > num) {
+								positionAndProbality.first = i;
+								positionAndProbality.second = num;
+							}
+							else if (positionAndProbality.second == num) {
+								if (positionAndProbality.first > i)
+									positionAndProbality.second = num;
+							}
+							}
+						}
+
+
+						//compare
+						/*if (c == 0) {
+							if (positionAndProbality.second > num) {
+								positionAndProbality.first = i;
+								positionAndProbality.second = num;
+							}
+							else if (positionAndProbality.second == num) {
+								if (positionAndProbality.first > i)
+									positionAndProbality.second = num;
+							}
+						}*/
+					
+				}
+				
+				//if not affect father
+				if (isafected == false) {
+				//	std::cout << "debug\n";
+					for (std::set<std::string>::iterator its = it->second.BeConsist.begin(); its != it->second.BeConsist.end(); its++)
+					{
+					
+						
+						std::map<std::string, Node>::iterator itps = Circuit.find(*its);
+						if (itps->second.ASAPlevel <= i && itps->second.ALAPlevel >= i) { //in ASAP~ALAP reange ,be affect
+							all = true;
+							double motherNumSub = (double)(itps->second.ALAPlevel) - (double)(itps->second.ASAPlevel) + 1.0;
+							//now is 0 possible
+							switch (itps->second.status)
+							{
+							case _AND:
+								num += qand[i] * (0.0 - (double)1.0 / motherNumSub);
+								break;
+							case _OR:
+								num += qor[i] * (0.0 - (double)1.0 / motherNumSub);
+								break;
+							case _NOT:
+								num += qnot[i] * (0.0 - (double)1.0 / motherNumSub);
+								break;
+							default:
+								break;
+							}
+							//next is 1 possible
+							bool a = 0;
+							for (int j = i + 1; j <= itps->second.ALAPlevel; j++)
+							{
+								
+								a = 1;
+								double keep;
+								switch (itps->second.status)
+								{
+								case _AND:
+									keep = qand[j] * (1.0 - (double)1.0 / motherNumSub);
+									num += keep;
+									break;
+								case _OR:
+									keep = qor[j] * (1.0 - (double)1.0 / motherNumSub);
+									num += keep;
+									break;
+								case _NOT:
+									keep = qnot[j] * (1.0 - (double)1.0 / motherNumSub);
+									num += keep;
+									break;
+								default:
+									break;
+								}
+
+								if (positionAndProbality.second > num) {
+									positionAndProbality.first = i;
+									positionAndProbality.second = num;
+								}
+								else if (positionAndProbality.second == num) {
+									if (positionAndProbality.first > i)
+										positionAndProbality.second = num;
+								}
+								num -= keep;
+							}
+
+							if (a==0) {
+								if (positionAndProbality.second > num) {
+									positionAndProbality.first = i;
+									positionAndProbality.second = num;
+								}
+								else if (positionAndProbality.second == num) {
+									if (positionAndProbality.first > i)
+										positionAndProbality.second = num;
+								}
+							}
+						}
+
+
+					
+					}
+
+
+
+					
+				}
+
+				//total force is num
+				//find smallest
+				if (!all)
+				{
+					if (positionAndProbality.second > num) {
+						positionAndProbality.first = i;
+						positionAndProbality.second = num;
+					}
+					else if (positionAndProbality.second == num) {
+						if (positionAndProbality.first > i)
+							positionAndProbality.second = num;
+					}
+				}
+
+			}
+
+
+
+
+
+
+
+
+			///////
+			it->second.finallevel = positionAndProbality.first;
+			it->second.ASAPlevel = positionAndProbality.first;
+			it->second.ALAPlevel = positionAndProbality.first;
+			//std::cout << it->first << "   " << positionAndProbality.first<< "  " << positionAndProbality.second << "  "<<"\n";
+		/*	if (it->first == "n")
+			{
+				std::cout << "\n";
+			}*/
+			//schedule
+			for (std::set<std::string>::iterator it_father = it->second.Consist.begin(); it_father != it->second.Consist.end(); it_father++)
+			{
+				std::map<std::string, Node>::iterator itps_father = Circuit.find(*it_father);
+				if (itps_father->second.ALAPlevel >= positionAndProbality.first)
+				{
+					itps_father->second.ALAPlevel = positionAndProbality.first-1;
+				}
+				if (itps_father->second.ALAPlevel <= itps_father->second.ASAPlevel)
+				{
+					itps_father->second.ALAPlevel = itps_father->second.ASAPlevel;
+				}
+			}
+			for (std::set<std::string>::iterator its = it->second.BeConsist.begin(); its != it->second.BeConsist.end(); its++)
+			{
+				RecurisonForReschdle(*its, positionAndProbality.first);
+			}
+
+			for (std::vector< std::pair<std::string, Node>>::iterator itv = valueExceptionCircuit.begin(); itv != valueExceptionCircuit.end(); itv++) {
+				if (itv->first != it->first) {
+					std::map<std::string, Node>::iterator itpsv = Circuit.find(itv->first);
+					itv->second.ALAPlevel = itpsv->second.ALAPlevel;
+					itv->second.ASAPlevel = itpsv->second.ASAPlevel;
+					itv->second.finallevel = itpsv->second.finallevel;
+				}
+			}
+			for (std::vector< std::pair<std::string, Node>>::iterator itz = valueExceptionCircuit.begin(); itz != valueExceptionCircuit.end(); itz++) {
+				Circuit[itz->first] = itz->second;
+			}
+
+		/*	if (it->first == "n")
+			{
+				std::cout << "\n";
+			}*/
+		}
+		else {
+	/*	if (it->first == "l")
+		{
+			std::cout << "\n";
+		}*/
+			it->second.finallevel = it->second.ASAPlevel;
+			std::map<std::string, Node>::iterator itpsv = Circuit.find(it->first);
+			itpsv->second = it->second;
+			for (std::set<std::string>::iterator it_father = it->second.Consist.begin(); it_father != it->second.Consist.end(); it_father++)
+			{
+				std::map<std::string, Node>::iterator itps_father = Circuit.find(*it_father);
+				if (itps_father->second.ALAPlevel >= it->second.finallevel)
+				{
+					itps_father->second.ALAPlevel = it->second.finallevel - 1;
+				}
+				if (itps_father->second.ALAPlevel <= itps_father->second.ASAPlevel)
+				{
+					itps_father->second.ALAPlevel = itps_father->second.ASAPlevel;
+				}
+
+			}
+			for (std::vector< std::pair<std::string, Node>>::iterator itv = valueExceptionCircuit.begin(); itv != valueExceptionCircuit.end(); itv++) {
+				if (itv->first != it->first) {
+					std::map<std::string, Node>::iterator itpsv = Circuit.find(itv->first);
+					itv->second.ALAPlevel = itpsv->second.ALAPlevel;
+					itv->second.ASAPlevel = itpsv->second.ASAPlevel;
+					itv->second.finallevel = itpsv->second.finallevel;
+				}
+			}
+			for (std::vector< std::pair<std::string, Node>>::iterator itz = valueExceptionCircuit.begin(); itz != valueExceptionCircuit.end(); itz++) {
+				Circuit[itz->first] = itz->second;
+			}
+		}
+		//reset
+		for (int i = 0; i < this->outputMaxtime; i++)
+		{
+			this->qand[i] = 0;
+			this->qnot[i] = 0;
+			this->qor[i] = 0;
+		}
+		//update time-frames
+		for (std::map<std::string, Node>::iterator it = Circuit.begin(); it != Circuit.end(); it++)
+		{
+			if (it->second.status != _NULL) { //not initial Node
+
+
+				double motherNum = (it->second.ALAPlevel) - (it->second.ASAPlevel) + 1.0;
+				for (int i = it->second.ASAPlevel; i <= it->second.ALAPlevel; i++)
+				{
+					switch (it->second.status)
+					{
+					case _AND:
+						this->qand[i] += 1.0 / motherNum;
+						break;
+					case _OR:
+						this->qor[i] += 1.0 / motherNum;
+						break;
+					case _NOT:
+						this->qnot[i] += 1.0 / motherNum;
+						break;
+					default:
+						break;
+					}
+				}
+
+			}
+		}
+	}
+
+	//push
+
+	Circuit.clear();
+	for (std::vector< std::pair<std::string, Node>>::iterator it = valueExceptionCircuit.begin(); it != valueExceptionCircuit.end(); it++) {
+		Circuit[it->first] = it->second;
+	}
+
+}
+
 
 void Graph::RecurisonForReschdle(std::string _name, int _level)
 {

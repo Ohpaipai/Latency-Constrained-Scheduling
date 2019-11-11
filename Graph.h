@@ -62,8 +62,9 @@ public:
 	void setException();
 	void RecurisonForALAP(std::map<std::string, Node>&, std::string, int, bool&);
 	void schdeul();
+	void schdeulForChildrenNum(bool);
 	//void RecurisonForPsforce(std::string _name,int _time);
-	void RecurisonForReschdle(std::string _name,int _level);
+	void RecurisonForReschdle(std::string _name, int _level);
 	
 private:
 	std::map<std::string, Node>Circuit; //graph
