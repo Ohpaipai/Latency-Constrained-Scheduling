@@ -65,10 +65,40 @@ public:
 	void schdeulForChildrenNum(bool);
 	//void RecurisonForPsforce(std::string _name,int _time);
 	void RecurisonForReschdle(std::string _name, int _level);
-	
+	void Check(){
+		bool rightanswer=true;
+		for(std::map<std::string, Node>::iterator it = Circuit.begin(); it != Circuit.end(); it++)
+		{
+			if(it->second.status != _NULL){
+				for(std::set<std::string>::iterator its = it->second.Consist.begin(); its != it->second.Consist.end(); its++)
+				{
+					std::map<std::string, Node>::iterator itFather=Circuit.find(*its);	
+					if(it->second.finallevel <= itFather->second.finallevel){
+						rightanswer=false;
+						break;	
+					}
+				}
+				for(std::set<std::string>::iterator its = it->second.BeConsist.begin(); its != it->second.BeConsist.end(); its++)
+				{
+					std::map<std::string, Node>::iterator itFather=Circuit.find(*its);	
+					if(it->second.finallevel >= itFather->second.finallevel){
+						rightanswer=false;
+
+					}
+				}
+			}
+		}
+
+
+		if(rightanswer)
+			std::cout<<"right\n";
+		else
+			std::cout<<"wrong\n";
+	}	
 private:
 	std::map<std::string, Node>Circuit; //graph
 	int Restrict_AND_Resource;
+	std::map<std::string, Node>CircuitBackup; //graph
 	int Restrict_OR_Resource;
 	int Restrict_NOT_Resource;
 	int MaxtimeInASAP=0; //ASAP max

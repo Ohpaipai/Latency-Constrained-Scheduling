@@ -360,34 +360,34 @@ void Graph::COut()
 			if (this->Restrict_AND_Resource < b) this->Restrict_AND_Resource = b;
 			if (this->Restrict_OR_Resource < a) this->Restrict_OR_Resource = a;
 			if (this->Restrict_NOT_Resource < c) this->Restrict_NOT_Resource = c;
-			std::cout << i << " :";
-			std::cout << " { ";
+			std::cout << i << ":";
+			std::cout << "{ ";
 			for (int k = 0; k < outand.size(); k++)
 			{
 				if (k + 1 == outand.size())
 					std::cout << outand[k];
 				else
-					std::cout << outand[k] << ",";
+					std::cout << outand[k] << " ";
 			}
 			std::cout << " } ";
-			std::cout << " { ";
+			std::cout << "{ ";
 			for (int k = 0; k < outor.size(); k++)
 			{
 				if (k + 1 == outor.size())
 					std::cout << outor[k];
 				else
-					std::cout << outor[k] << ",";
+					std::cout << outor[k] << " ";
 			}
 			std::cout << " } ";
-			std::cout << " { ";
+			std::cout << "{ ";
 			for (int k = 0; k < outnot.size(); k++)
 			{
 				if (k + 1 == outnot.size())
 					std::cout << outnot[k];
 				else
-					std::cout << outnot[k] << ",";
+					std::cout << outnot[k] << " ";
 			}
-			std::cout << " } ";
+			std::cout << " }";
 			std::cout << std::endl;
 		}
 

@@ -14,14 +14,18 @@ if(argc==3){
 		int timeristrict;
 		ss>>timeristrict;
 		G.makeCircuitDiagram(name);
+//		std::cout<<"hello\n";
 		if(G.ALAP(timeristrict)){
-		G.schdeul();
+			std::cout << "Latency-constrained Scheduling\n";
+		//G.schdeul();
+        G.schdeulForChildrenNum(0);
 		G.COut();
+		//G.Check();
 		}else
-			std::cout<<"No feasible Scheduling"<<std::endl;
+			std::cout<<"No feasible Scheduling\nEND"<<std::endl;
 
 }
-else if(argc==5)
+/*else if(argc==5)
 {
 	std::string s1=argv[1];
  	if(s1=="exception")
@@ -39,6 +43,7 @@ else if(argc==5)
                 if(G.ALAP(timeristrict)){
                 G.schdeulForChildrenNum(up);
                 G.COut();
+				G.Check();
                 }
                 else
                         std::cout<<"No feasible Scheduling"<<std::endl;
@@ -51,6 +56,7 @@ else if(argc==5)
 else{
 	 std::cout<<"wrong input@"<<std::endl;
 }
+*/
 //	std::cout << "--------------------------------------------------------------------------\n";
 /*	if (G.ALAP(50)) {
 		//G.setException();
